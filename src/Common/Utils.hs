@@ -1,5 +1,6 @@
 module Common.Utils where
 
+import Text.Parsec
 split :: (Eq a) => [a] ->  [a] -> [[a]]
 split _ [] = []
 split sep lst = let (h, t) = splitFirst lst in h : split sep (drop (length sep) t) where
@@ -12,3 +13,5 @@ replace :: Eq a => a -> a -> [a] -> [a]
 replace _ _ [] = []
 replace a b (h:t) | a == h = (b:t)
 replace _ _ l = l
+
+type Parser = Parsec String ()
