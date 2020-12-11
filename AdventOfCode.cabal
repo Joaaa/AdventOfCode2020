@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2dacdc98fad7153762607c6da5c6da691d2797dc8b39f82738a1445cc3f7bd20
+-- hash: 5fe06ed795e37cc617279ae2ee5a2398389df2df4ce2703773ef07c93ca961bc
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -33,6 +33,8 @@ library
       Day1.Part2
       Day10.Part1
       Day10.Part2
+      Day11.Part1
+      Day11.Part2
       Day2.Part1
       Day2.Part2
       Day3.Part1
@@ -60,4 +62,5 @@ library
     , containers
     , mtl
     , parsec
+    , vector
   default-language: Haskell2010

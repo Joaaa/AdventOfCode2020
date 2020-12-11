@@ -24,6 +24,7 @@ dependencies:
 - parsec
 - mtl
 - containers
+- vector
 
 library:
   source-dirs:
