@@ -5,7 +5,6 @@ module Day13.Part2 where
 import Common.FileLoading
 import Common.Utils
 import Data.Maybe
-import Control.Monad
 import Data.List
 
 data Bus = Bus Integer Integer deriving (Show, Eq, Ord)
@@ -15,17 +14,10 @@ data Equation = Equation {
     modulus :: Integer
 } deriving Show
 
--- calcM :: [Equation] -> Integer
--- calcM eqs = product $ map modulus eqs
-
--- calcMi :: [Equation] -> Integer -> Integer
--- calcMi eqs i = calcM eqs
-
-phi :: [Integer] -> Integer
-phi primes = round $ product (map fromIntegral primes) * product [1 - 1 / (fromIntegral p :: Double) | p <- primes]
-
-inverse :: Integer -> Integer -> Integer -> Integer
-inverse mi ni phiN = (mi ^ (phiN - 1)) `mod` ni
+inverse :: Integer -> Integer -> Integer
+inverse mi ni = case find (\i -> (mi*i) `mod` ni == 1) [1..(ni-1)] of
+    Just r -> r
+    Nothing -> error "Inverse not found"
 
 solution = do
     schedule <- split "," . head <$> readLines (Day 13)
@@ -40,9 +32,7 @@ solution = do
     print $ "m: " <> show m
     let mis = [m `div` n | n <- ns]
     print $ "mis: " <> show mis
-    let phis = [phi [ns !! j | j <- [0..length eqs-1], j /= i] | i <- [0..length eqs-1]]
-    print $ "phis: " <> show phis
-    let invs = [inverse mi ni phi' | (mi, ni, phi') <- zip3 mis ns phis]
+    let invs = [inverse mi ni | (mi, ni) <- zip mis ns]
     print $ "invs: " <> show invs
     print [(mi * inv) `mod` n | (n, mi, inv) <- zip3 ns mis invs]
     let t = sum [mi * minv * oi | (mi, oi, minv) <- zip3 mis os invs]
