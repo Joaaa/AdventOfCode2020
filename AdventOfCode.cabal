@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a524acde926ab628c2e3a5297ad7fbe89f3b9479a1459331bd37162a6bbc99ce
+-- hash: de0c002fda69b5bcc35c34910d51cdd7458149895b1edd0521dca2739ac8902a
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -24,51 +24,6 @@ extra-source-files:
 source-repository head
   type: git
   location: https://github.com/githubuser/AdventOfCode
-
-library
-  exposed-modules:
-      Common.FileLoading
-      Common.Utils
-      Day1.Part1
-      Day1.Part2
-      Day10.Part1
-      Day10.Part2
-      Day11.Part1
-      Day11.Part2
-      Day12.Part1
-      Day12.Part2
-      Day13.Part1
-      Day13.Part2
-      Day2.Part1
-      Day2.Part2
-      Day3.Part1
-      Day3.Part2
-      Day4.Part1
-      Day4.Part1Parsec
-      Day4.Part2
-      Day4.Part2Parsec
-      Day5.Part1
-      Day5.Part2
-      Day6.Part1
-      Day6.Part2
-      Day7.Part1
-      Day7.Part2
-      Day8.Part1
-      Day8.Part2
-      Day9.Part1
-      Day9.Part2
-      Main
-  other-modules:
-      Paths_AdventOfCode
-  hs-source-dirs:
-      src
-  build-depends:
-      base >=4.7 && <5
-    , containers
-    , mtl
-    , parsec
-    , vector
-  default-language: Haskell2010
 
 executable Day13-exe
   main-is: Main.hs

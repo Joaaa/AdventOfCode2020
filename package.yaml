@@ -26,9 +26,9 @@ dependencies:
 - containers
 - vector
 
-library:
-  source-dirs:
-    - src
+# library:
+#   source-dirs:
+#     - src
 
 executables:
   Day13-exe:
