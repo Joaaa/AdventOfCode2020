@@ -39,13 +39,13 @@ matches (Rule bag bagAmounts) bags = any bagAmountMatches bagAmounts where
 newBags :: [Rule] -> [Bag] -> [Bag]
 newBags rules bags = mapMaybe (\r@(Rule bag _) -> if bag `elem` bags then Nothing else if matches r bags then Just bag else Nothing) rules
 
-solution = do
-    rules <- readParsed (Day 7) (endBy parseRule (char '.' >> endOfLine))
+solution = print 123
+    -- rules <- readParsed (Day 7) (endBy parseRule (char '.' >> endOfLine))
     -- forM_ (newBags rules [Bag "shiny" "gold"]) print
-    let results = (`evalState` [Bag "shiny" "gold"]) $ replicateM 10 $ do
-        bags <- get
-        let new = newBags rules bags
-        modify (<> new)
-        get
-    print $ map (pred . length) results
+    -- let results = (`evalState` [Bag "shiny" "gold"]) $ replicateM 10 $ do
+    --     bags <- get
+    --     let new = newBags rules bags
+    --     modify (<> new)
+    --     get
+    -- print $ map (pred . length) results
 
