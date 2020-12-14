@@ -8,6 +8,7 @@ import Text.Parsec
 import Common.FileLoading
 import Control.Monad.State
 import Data.Bits
+import qualified Data.Map as M
 
 data Instruction = Mask String | Mem Integer Integer deriving Show
 
@@ -29,10 +30,10 @@ parseInstructions = endBy parseInstruction endOfLine
 
 data ExecState = ExecState {
     mask :: String,
-    mem :: [(Integer, Integer)]
+    mem :: M.Map Integer Integer
 } deriving Show
 
-initState = ExecState (replicate 36 'X') []
+initState = ExecState (replicate 36 'X') M.empty
 
 ---
 
@@ -51,23 +52,16 @@ possibleAddressess ('X':mt) (_:t) = let pa = possibleAddressess mt t in map ('0'
 getAddressess :: String -> Integer -> [Integer]
 getAddressess mask address = map fromBits $ possibleAddressess mask (toBits address)
 
-setMem :: Integer -> Integer -> [(Integer, Integer)] -> [(Integer, Integer)]
-setMem address value [] = [(address, value)]
-setMem address value ((a, _):t) | a == address = (a, value) : t
-setMem address value (h:t) = h : setMem address value t
-
-processInstruction :: (MonadState ExecState m, MonadIO m) => Instruction -> m ()
+processInstruction :: (MonadState ExecState m) => Instruction -> m ()
 processInstruction (Mask mask) = modify (\m@ExecState{mask=_} -> m{mask=mask})
 processInstruction (Mem address value) = do
-    liftIO $ print (Mem address value)
     mask <- gets mask
-    liftIO $ print $ length $ getAddressess mask address
     forM_ (getAddressess mask address) $ \address' -> do
-        liftIO $ print $ "Setting address " <> show address'
-        modify (\m@ExecState{mem} -> m{mem=setMem address' value mem})
+        modify (\m@ExecState{mem} -> m{mem=M.insert address' value mem})
 
 solution = do
     instructions <- readParsed (Day 14) parseInstructions
     result <- flip execStateT initState $ forM_ instructions processInstruction
     print "Printing result"
-    print $ sum $ map snd $ mem result
+    print $ M.size $ mem result
+    print $ sum $ map snd $ M.toList $ mem result
