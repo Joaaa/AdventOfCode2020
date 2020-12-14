@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: de0c002fda69b5bcc35c34910d51cdd7458149895b1edd0521dca2739ac8902a
+-- hash: f19ede9fdad0f7ed49718a6c7ac220607a60475485602db144cfcb75dab5f57c
 
 name:           AdventOfCode
 version:        0.1.0.0
@@ -25,7 +25,7 @@ source-repository head
   type: git
   location: https://github.com/githubuser/AdventOfCode
 
-executable Day13-exe
+executable default-exe
   main-is: Main.hs
   other-modules:
       Common.FileLoading
@@ -40,6 +40,8 @@ executable Day13-exe
       Day12.Part2
       Day13.Part1
       Day13.Part2
+      Day14.Part1
+      Day14.Part2
       Day2.Part1
       Day2.Part2
       Day3.Part1

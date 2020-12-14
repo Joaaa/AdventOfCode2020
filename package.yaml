@@ -31,7 +31,7 @@ dependencies:
 #     - src
 
 executables:
-  Day13-exe:
+  default-exe:
     main:                Main.hs
     source-dirs:         src
     ghc-options:
