@@ -26,10 +26,6 @@ dependencies:
 - containers
 - vector
 
-# library:
-#   source-dirs:
-#     - src
-
 executables:
   default-exe:
     main:                Main.hs
