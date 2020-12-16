@@ -4,6 +4,7 @@ import Text.Parsec
 import Common.Utils
 import Common.FileLoading
 import Data.List
+import Control.Monad
 type Range = (Int, Int)
 
 data Rule = Rule String Range Range deriving Show
@@ -60,4 +61,8 @@ solution = do
     input <- readParsed (Day 16) parseInput
     let valid = filter (isValid $ rules input) $ tickets input
     -- let r = filter (\rules -> all (orderMatches rules) valid) $ permutations $ rules input
-    print $ findOrder (rules input) valid
+    let matching = [[i | i <- [0 .. length (rules input) - 1], all (\(Ticket t) -> rules input !! i `ruleMatches` (t !! j)) valid] | j <- [0 .. 19]]
+    forM_ matching print
+    -- manual processing magic happens here
+    let indicesToMultiply = [8, 4, 18, 9, 17, 7]
+    print $ product $ map ((\(Ticket t) -> t) (yourTicket input) !!) indicesToMultiply
