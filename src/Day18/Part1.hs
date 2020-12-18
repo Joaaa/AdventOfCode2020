@@ -5,38 +5,33 @@ import Common.Utils
 import Data.Functor
 import Common.FileLoading
 import Control.Monad
+import Control.Applicative (liftA2)
 
-newtype Operation = Operation (Int -> Int -> Int)
-instance Show Operation where
-    show _ = "(?)"
+data Operation = Sum | Prod deriving Show
 
-data Equation = Number Int | Brackets Equation | Op Operation Equation Equation deriving Show
+apply Sum = (+)
+apply Prod = (*)
 
-parseOperation :: Parser Operation
-parseOperation = Operation <$> choice [char '+' $> (+), char '*' $> (*)]
+data Equation = Number Int | Equation Equation [(Operation, Equation)] deriving Show
 
 parseNumber :: Parser Equation
 parseNumber = Number . read <$> many digit
 
 parseParens :: Parser Equation
-parseParens = Brackets <$> (char '(' *> parseEquation <* char ')')
+parseParens = char '(' *> parseEquation <* char ')'
 
-parseOp :: Parser Equation
-parseOp = do
-    l <- try $ (parseParens <|> parseNumber) <* char ' '
-    operation <- parseOperation
-    char ' '
-    Op operation l <$> parseEquation
+parseTerm = parseParens <|> parseNumber
+
+parseOp :: Parser (Operation, Equation)
+parseOp = liftA2 (,) (choice [try (string " + ") $> Sum, string " * " $> Prod]) parseTerm
 
 parseEquation :: Parser Equation
-parseEquation = parseOp <|> parseParens <|> parseNumber
+parseEquation = liftA2 Equation parseTerm $ many parseOp
 
 getValue :: Equation -> Int
 getValue (Number n) = n
-getValue (Brackets e) = getValue e
-getValue (Op (Operation operation) l (Number r)) = operation (getValue l) r
-getValue (Op (Operation operation) l (Op operation' l1 r)) = getValue $ Op operation' (Number $ operation (getValue l) (getValue l1)) r
-getValue (Op (Operation operation) l r) = operation (getValue l) (getValue r)
+getValue (Equation e []) = getValue e
+getValue (Equation e1 ((op, e2):eqs)) = getValue (Equation (Number $ apply op (getValue e1) (getValue e2)) eqs)
 
 solution = do
     equations <- readParsed (Day 18) $ sepBy parseEquation endOfLine
