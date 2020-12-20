@@ -15,3 +15,6 @@ replace a b (h:t) | a == h = (b:t)
 replace _ _ l = l
 
 type Parser = Parsec String ()
+
+bitsToInt :: [Bool] -> Int
+bitsToInt bits = sum [if b then 2 ^ i else 0 | (b, i) <- zip (reverse bits) [0..]]
