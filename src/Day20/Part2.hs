@@ -9,6 +9,7 @@ import Control.Monad
 import qualified Data.Map as M
 import Data.List
 import Data.Maybe
+import Debug.Trace
 
 type Grid = [[Bool]]
 data Tile = Tile Int Grid
@@ -48,30 +49,42 @@ seaMonster = [(x, y) | x <- [0 .. length (head image) - 1], y <- [0 .. length im
             " #  #  #  #  #  #   "
         ]
 
-type PlacedTile = (TileWithBorders, Int)
+data Dir = UP | RIGHT | DOWN | LEFT deriving (Show, Eq, Enum)
+data Flip = UNFLIPPED | FLIPPED deriving (Show, Eq, Enum)
+type Orientation = (Dir, Flip)
+type PlacedTile = (TileWithBorders, Orientation)
 
 type BorderMap = M.Map Int [TileWithBorders]
 
-topBorder = (!! 0)
-rightBorder = (!! 2)
-bottomBorder = (!! 4)
-leftBorder = (!! 6)
+opposite UP = DOWN
+opposite RIGHT = LEFT
+opposite DOWN = UP
+opposite LEFT = RIGHT
 
-withOrientation :: Int -> ([a] -> a) -> [a] -> a
-withOrientation i f = f . drop i . cycle
+getBorder :: Orientation -> Orientation -> [a] -> a
+getBorder (d1, f1) (d2, f2) = (!! (i d1 + i d2 + if f1 == f2 then 0 else 1)) . cycle where
+    i UP = 0
+    i RIGHT = 2
+    i DOWN = 4
+    i LEFT = 6
 
-tilesToRightOf :: BorderMap -> PlacedTile -> [PlacedTile]
-tilesToRightOf borderMap tile@(TWB (Tile id _) bs, or) = if length (borderMap M.! border) > 1 then tile : tilesToRightOf borderMap (ttr, ttrOr) else [tile] where
-    border = withOrientation or rightBorder bs
+allOrientations :: [Orientation]
+allOrientations = [(d, f) | d <- [UP ..], f <- [UNFLIPPED ..]]
+
+tilesInDirection :: BorderMap -> PlacedTile -> Dir -> [PlacedTile]
+tilesInDirection borderMap tile@(TWB (Tile id _) bs, or) dir = if length (borderMap M.! border) > 1 then tile : tilesInDirection borderMap (ttr, ttrOr) dir else [tile] where
+    border = getBorder (dir, UNFLIPPED) or bs
     ttr@(TWB _ rbs) = head $ filter (\(TWB (Tile id' _) _) -> id' /= id) $ borderMap M.! border
-    ttrOr = fromJust $ elemIndex border $ drop 6 $ cycle rbs
+    ttrOr = head [ttrOr | ttrOr <- allOrientations, getBorder (opposite dir, FLIPPED) ttrOr rbs == border]
 
 solution = do
     tiles <- map addBorders <$> readParsed (Day 20) (many parseTile)
     let allBorders = concatMap (\(TWB _ b) -> b) tiles
     let countBorders b = length $ filter (==b) allBorders
     let topLeft@(TWB _ tlbs) = head $ filter (\(TWB t b) -> 4 == length (filter (\b -> countBorders b >= 2) b)) tiles
-    let tlOr = head [i | i <- [0, 2, 4, 6], countBorders (withOrientation i topBorder tlbs) == 1, countBorders (withOrientation i leftBorder tlbs) == 1]
+    let tlOr = head [(i, UNFLIPPED) | i <- [UP ..], countBorders (getBorder (UP, UNFLIPPED) (i, UNFLIPPED) tlbs) == 1, countBorders (getBorder (LEFT, UNFLIPPED) (i, UNFLIPPED) tlbs) == 1]
     let borderMap = M.fromListWith (<>) $ concatMap (\t@(TWB _ bs) -> map (,[t]) bs) tiles
-    print $ length $ tilesToRightOf borderMap (topLeft, tlOr)
-    forM_ (take 10 $ M.toList borderMap) print
+    let leftTiles = tilesInDirection borderMap (topLeft, tlOr) DOWN
+    let tileGrid = map (\t -> tilesInDirection borderMap t RIGHT) leftTiles
+    print $ length tileGrid
+    print $ map length tileGrid
