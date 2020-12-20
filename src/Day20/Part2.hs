@@ -56,17 +56,38 @@ type PlacedTile = (TileWithBorders, Orientation)
 
 type BorderMap = M.Map Int [TileWithBorders]
 
-opposite UP = DOWN
-opposite RIGHT = LEFT
-opposite DOWN = UP
-opposite LEFT = RIGHT
+oppD UP = DOWN
+oppD RIGHT = LEFT
+oppD DOWN = UP
+oppD LEFT = RIGHT
 
-getBorder :: Orientation -> Orientation -> [a] -> a
-getBorder (d1, f1) (d2, f2) = (!! (i d1 + i d2 + if f1 == f2 then 0 else 1)) . cycle where
-    i UP = 0
-    i RIGHT = 2
-    i DOWN = 4
-    i LEFT = 6
+oppF UNFLIPPED = FLIPPED
+oppF FLIPPED = UNFLIPPED
+
+indexD d = 2 * fromEnum d
+indexF f = fromEnum f
+
+-- getBorder :: Orientation -> [a] -> a
+-- getBorder (d, f) = (!! (getIndex d + if f == FLIPPED then 1 else 0))
+
+-- getBorder :: Orientation -> Orientation -> [a] -> a
+-- getBorder (d1, f1) (d2, f2) = (!! ((getIndex (applyFlip f1 d1) + getIndex (applyFlip f2 d2)) `mod` 8)) . cycle where
+--     applyFlip _ UP = UP
+--     applyFlip _ DOWN = DOWN
+--     applyFlip UNFLIPPED LEFT = LEFT
+--     applyFlip UNFLIPPED RIGHT = RIGHT
+--     applyFlip FLIPPED LEFT = RIGHT
+--     applyFlip FLIPPED RIGHT = LEFT
+
+flip' :: Orientation -> Orientation
+flip' (d, f) = (if d `elem` [UP, DOWN] then d else oppD d, oppF f)
+
+rotate (d, f) d' = (toEnum ((fromEnum d + fromEnum d') `mod` 4), f)
+
+applyOr :: Orientation -> Orientation -> Orientation
+applyOr dir (d, f) = rotate (if f == FLIPPED then flip' dir else dir) d
+
+getBorder dir or bs = let (d, f) = applyOr dir or in bs !! (indexD d + indexF f)
 
 allOrientations :: [Orientation]
 allOrientations = [(d, f) | d <- [UP ..], f <- [UNFLIPPED ..]]
@@ -75,7 +96,7 @@ tilesInDirection :: BorderMap -> PlacedTile -> Dir -> [PlacedTile]
 tilesInDirection borderMap tile@(TWB (Tile id _) bs, or) dir = if length (borderMap M.! border) > 1 then tile : tilesInDirection borderMap (ttr, ttrOr) dir else [tile] where
     border = getBorder (dir, UNFLIPPED) or bs
     ttr@(TWB _ rbs) = head $ filter (\(TWB (Tile id' _) _) -> id' /= id) $ borderMap M.! border
-    ttrOr = head [ttrOr | ttrOr <- allOrientations, getBorder (opposite dir, FLIPPED) ttrOr rbs == border]
+    ttrOr = head [ttrOr | ttrOr <- allOrientations, getBorder (oppD dir, FLIPPED) ttrOr rbs == border]
 
 solution = do
     tiles <- map addBorders <$> readParsed (Day 20) (many parseTile)
