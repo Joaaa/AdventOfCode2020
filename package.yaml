@@ -25,6 +25,7 @@ dependencies:
 - mtl
 - containers
 - vector
+- time
 
 executables:
   default-exe:
