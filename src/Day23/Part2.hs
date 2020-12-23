@@ -10,23 +10,25 @@ import Debug.Trace
 type Cup = Int
 type Cups = S.Seq Int
 
-puzzleInput :: Cups
-puzzleInput = S.fromList (map (read . (:[])) "389125467" <> [10..1000000])
+puzzleInput :: [Cup]
+puzzleInput = map (read . (:[])) "586439172" <> [10..1000000]
 
-playRound :: Cups -> Cups
-playRound cups = selectNext $ S.take (destinationIndex+1) otherCups <> pickedUpCups <> S.take (length otherCups - destinationIndex - 1) (S.drop (destinationIndex+1) otherCups)
-    where
-        currentCup = sHead cups
-        pickedUpCups = S.take 3 $ S.drop 1 cups
-        otherCups = sHead cups :<| S.drop 4 cups
-        destinationCup = head [c | c <- [currentCup-1, currentCup-2, currentCup-3, currentCup-4, 1000000, 999999, 999998, 999997], c > 0, c `notElem` pickedUpCups]
-        destinationIndex = head $ catMaybes [case otherCups S.!? i of Just cup -> if cup == destinationCup then Just i else Nothing; _ -> Nothing | i <- interleavedIndices otherCups]
-        selectNext (h :<| t) = t :|> h
-        sHead (h :<| _) = h
+createCups :: [Cup] -> Cups
+createCups input = foldr (\(i, v) -> S.adjust' (const v) i) (S.replicate (length input + 1) 0) [(a, b) | (a, b) <- zip input (drop 1 input <> [head input])]
 
-interleavedIndices seq = let l = S.length seq in concat [[a, b] | (a, b) <- zip [0..(l `div` 2)-1] [l-1, l-2 .. (l `div` 2)]]
+s ! i = fromJust $ s S.!? i
+
+playRound :: (Cups, Cup) -> (Cups, Cup)
+playRound (cups, currentCup) = (cups''', cups''' ! currentCup) where
+    next = (cups !)
+    cupsToMove = take 3 $ drop 1 $ iterate next currentCup
+    destinationCup = head [c | c <- [currentCup-1, currentCup-2, currentCup-3, currentCup-4, 1000000, 999999, 999998, 999997], c > 0, c `notElem` cupsToMove]
+    cups' = S.update currentCup (next $ last cupsToMove) cups
+    cups'' = S.update (last cupsToMove) (next destinationCup) cups'
+    cups''' = S.update destinationCup (head cupsToMove) cups''
 
 solution = do
-    -- print $ map (S.take 20) $ take 10 $ iterate playRound puzzleInput
-    let solution = (!! 1000) $ iterate playRound puzzleInput
-    print $ S.take 8 $ S.drop 1 $ S.dropWhileL (/=1) solution
+    let solution = fst $ (!! 10000000) $ iterate playRound (createCups puzzleInput, head puzzleInput)
+    print (solution ! 1)
+    print (solution ! (solution ! 1))
+
