@@ -2,52 +2,31 @@ module Day23.Part2 where
 
 import Data.List
 import Data.Maybe
+import qualified Data.Sequence as S
+import Data.Sequence (Seq((:<|), (:|>)))
 import Data.Foldable (Foldable(toList))
-import qualified Data.Map.Strict as M
 import Debug.Trace
 
 type Cup = Int
-type Cups = [M.Map Cup Int]
+type Cups = S.Seq Int
 
 puzzleInput :: Cups
-puzzleInput = toCups (map (read . (:[])) "389125467" <> [10..1000000])
+puzzleInput = S.fromList (map (read . (:[])) "389125467" <> [10..1000000])
 
-toCups :: [Cup] -> Cups
-toCups l = map (M.fromList . flip zip [0..]) $ takeWhile (not . null) $ map (take 1000) $ iterate (drop 1000) l
-
--- Get cup at index i
-getCup :: Cups -> Int -> Cup
-getCup cups i | i > 1000000 = getCup cups (i `mod` 1000000)
-getCup (h:t) i | i >= M.size h = getCup t (i - M.size h)
-getCup (h:_) i = head $ mapMaybe (\(k, v) -> if v == i then Just k else Nothing) $ M.toList h
-
--- Get cup index by value
-getCupIndex :: Cups -> Cup -> Int
-getCupIndex cups cup = head $ mapMaybe (M.!? cup) cups
-
--- Remove cup by value
-removeCup :: Cups -> Cup -> Cups
-removeCup cups cup = [if cup `M.member` m then updateMap m else m | m <- cups]
+playRound :: Cups -> Cups
+playRound cups = selectNext $ S.take (destinationIndex+1) otherCups <> pickedUpCups <> S.take (length otherCups - destinationIndex - 1) (S.drop (destinationIndex+1) otherCups)
     where
-        updateMap m = let v = m M.! cup in M.map (\i -> if i > v then i-1 else i) (M.delete cup m)
-
--- Add cup after destionation cup by value
-addCup :: Cups -> Cup -> Cup -> Cups
-addCup cups destination cup = [if destination `M.member` m then updateMap m else m | m <- cups]
-    where
-        updateMap m = let v = m M.! destination in M.insert cup (v+1) $ M.map (\i -> if i > v then i+1 else i) m
-        
-
-playRound :: (Cups, Int) -> (Cups, Int)
-playRound (cups, i) = (nextCups, (if destinationIndex < i then i+4 else i+1) `mod` 1000000)
-    where
-        currentCup = getCup cups i
-        pickedUpCups = [getCup cups j | j <- [i+1 .. i+3]]
+        currentCup = sHead cups
+        pickedUpCups = S.take 3 $ S.drop 1 cups
+        otherCups = sHead cups :<| S.drop 4 cups
         destinationCup = head [c | c <- [currentCup-1, currentCup-2, currentCup-3, currentCup-4, 1000000, 999999, 999998, 999997], c > 0, c `notElem` pickedUpCups]
-        destinationIndex = getCupIndex cups destinationCup
-        cupsRemoved = foldl removeCup cups pickedUpCups
-        nextCups = foldl (`addCup` destinationCup) cupsRemoved (reverse pickedUpCups)
+        destinationIndex = head $ catMaybes [case otherCups S.!? i of Just cup -> if cup == destinationCup then Just i else Nothing; _ -> Nothing | i <- interleavedIndices otherCups]
+        selectNext (h :<| t) = t :|> h
+        sHead (h :<| _) = h
+
+interleavedIndices seq = let l = S.length seq in concat [[a, b] | (a, b) <- zip [0..(l `div` 2)-1] [l-1, l-2 .. (l `div` 2)]]
 
 solution = do
-    let solution = fst $ (!! 10000) $ iterate playRound (puzzleInput, 0)
-    print $ head solution
+    -- print $ map (S.take 20) $ take 10 $ iterate playRound puzzleInput
+    let solution = (!! 1000) $ iterate playRound puzzleInput
+    print $ S.take 8 $ S.drop 1 $ S.dropWhileL (/=1) solution
