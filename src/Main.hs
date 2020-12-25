@@ -2,7 +2,7 @@ module Main where
 
 import Data.Time 
 
-import Day23.Part2
+import Day25.Part1
 
 main = do
     t <- getCurrentTime 
